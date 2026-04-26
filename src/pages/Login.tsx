@@ -3,10 +3,21 @@ import { Navigate } from 'react-router-dom';
 import { Heart, Wallet } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
+const REMEMBER_PREF_KEY = 'mp_login_remember_me';
+
+function readRememberDefault(): boolean {
+  try {
+    return localStorage.getItem(REMEMBER_PREF_KEY) !== '0';
+  } catch {
+    return true;
+  }
+}
+
 export default function Login() {
   const { session, signIn, loading } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(readRememberDefault);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,7 +28,7 @@ export default function Login() {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
-    const { error } = await signIn(username, password);
+    const { error } = await signIn(username, password, rememberMe);
     setSubmitting(false);
     if (error) setError(error);
   }
@@ -67,6 +78,30 @@ export default function Login() {
                 autoComplete="current-password"
               />
             </div>
+
+            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-zinc-100 bg-zinc-50/80 px-3 py-2.5">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => {
+                  const v = e.target.checked;
+                  setRememberMe(v);
+                  try {
+                    localStorage.setItem(REMEMBER_PREF_KEY, v ? '1' : '0');
+                  } catch {
+                    /* private mode */
+                  }
+                }}
+                className="mt-0.5 h-4 w-4 shrink-0 rounded border-zinc-300 text-brand-600 focus:ring-brand-500"
+              />
+              <span className="text-xs leading-snug text-zinc-600">
+                <span className="font-medium text-zinc-800">Ingat saya</span>
+                <span className="mt-0.5 block text-zinc-500">
+                  Matikan jika perangkat dipakai bersama — sesi tidak disimpan setelah menutup
+                  browser.
+                </span>
+              </span>
+            </label>
 
             {error && (
               <p className="rounded-xl bg-rose-50 px-3 py-2 text-xs text-rose-700">
