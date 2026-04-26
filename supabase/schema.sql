@@ -77,8 +77,14 @@ insert into public.categories (name, type, icon, color) values
   ('Lainnya',      'expense', 'tag',          '#64748b');
 
 -- =====================================================
--- LANGKAH BERIKUTNYA — BIKIN 2 USER MANUAL
+-- LANGKAH BERIKUTNYA — DAFTARKAN 2 USER
 -- =====================================================
+-- Opsi A (disarankan): di root proyek, isi SUPABASE_SERVICE_ROLE_KEY di .env.local
+--   (Dashboard → Settings → API → service_role — jangan di-commit).
+--   Lalu: npm run seed:users
+--   Akun: nazirxz@money.app / nazir123 dan richan@money.app / richan123
+--
+-- Opsi B — manual di Dashboard:
 -- Buka Supabase Dashboard:
 --
 -- A. Authentication → Providers → Email

@@ -43,10 +43,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user: session?.user ?? null,
     loading,
     async signIn(usernameOrEmail, password) {
-      const email = usernameOrEmail.includes('@')
-        ? usernameOrEmail.trim()
-        : usernameToEmail(usernameOrEmail);
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const raw = usernameOrEmail.trim();
+      const email = raw.includes('@') ? raw : usernameToEmail(raw);
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password: password.trim(),
+      });
       return { error: error?.message ?? null };
     },
     async signOut() {
