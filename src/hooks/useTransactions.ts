@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { getDisplayName } from '@/lib/users';
 import type { TransactionWithCategory, TxType } from '@/lib/types';
 
 interface CreateInput {
@@ -34,10 +35,11 @@ export function useTransactions() {
   const create = useCallback(
     async (input: CreateInput) => {
       const { data: userData } = await supabase.auth.getUser();
-      const userId = userData.user?.id;
-      if (!userId) return { error: 'Tidak ada sesi pengguna' };
+      const user = userData.user;
+      if (!user) return { error: 'Tidak ada sesi pengguna' };
       const { error } = await supabase.from('transactions').insert({
-        user_id: userId,
+        user_id: user.id,
+        creator_name: getDisplayName(user.email),
         type: input.type,
         amount: input.amount,
         category_id: input.category_id,

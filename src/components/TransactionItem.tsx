@@ -1,5 +1,6 @@
 import { Trash2 } from 'lucide-react';
 import { getIcon } from '@/lib/icons';
+import { getColorByMemberName } from '@/lib/users';
 import type { TransactionWithCategory } from '@/lib/types';
 import { formatIDR, formatTime } from '@/lib/utils';
 
@@ -27,6 +28,15 @@ export default function TransactionItem({ tx, onDelete }: Props) {
         </p>
         <p className="truncate text-xs text-zinc-500">
           {tx.note ? tx.note : formatTime(tx.occurred_at)}
+          {tx.creator_name && (
+            <span
+              className="ml-1.5 inline-flex max-w-[5rem] items-center rounded-md px-1 py-0.5 text-[10px] font-semibold text-white"
+              style={{ backgroundColor: getColorByMemberName(tx.creator_name) }}
+              title={tx.creator_name}
+            >
+              {tx.creator_name}
+            </span>
+          )}
         </p>
       </div>
       <div className="flex items-center gap-2">

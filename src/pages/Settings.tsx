@@ -1,8 +1,11 @@
 import { LogOut, Mail, Shield } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { emailToUsername, getDisplayName } from '@/lib/users';
 
 export default function Settings() {
   const { user, signOut } = useAuth();
+  const displayName = getDisplayName(user?.email);
+  const username = emailToUsername(user?.email);
 
   return (
     <div className="px-5 pt-7">
@@ -12,13 +15,12 @@ export default function Settings() {
         <div className="flex items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-100 text-brand-700">
             <span className="text-lg font-bold uppercase">
-              {(user?.email ?? '?').charAt(0)}
+              {(displayName || '?').charAt(0)}
             </span>
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-zinc-900">
-              {user?.email}
-            </p>
+            <p className="truncate text-sm font-semibold text-zinc-900">{displayName}</p>
+            <p className="truncate text-xs text-zinc-500">@{username}</p>
             <p className="text-xs text-zinc-500">
               Bergabung{' '}
               {user?.created_at
@@ -34,7 +36,7 @@ export default function Settings() {
       </div>
 
       <div className="mt-4 card divide-y divide-zinc-100">
-        <Row icon={<Mail className="h-4 w-4" />} label="Email" value={user?.email ?? '-'} />
+        <Row icon={<Mail className="h-4 w-4" />} label="Email login" value={user?.email ?? '-'} />
         <Row
           icon={<Shield className="h-4 w-4" />}
           label="Penyimpanan"

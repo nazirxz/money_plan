@@ -1,13 +1,13 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import { usernameToEmail } from '@/lib/users';
 
 interface AuthContextValue {
   session: Session | null;
   user: User | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUp: (email: string, password: string) => Promise<{ error: string | null }>;
+  signIn: (usernameOrEmail: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -42,12 +42,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     session,
     user: session?.user ?? null,
     loading,
-    async signIn(email, password) {
+    async signIn(usernameOrEmail, password) {
+      const email = usernameOrEmail.includes('@')
+        ? usernameOrEmail.trim()
+        : usernameToEmail(usernameOrEmail);
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      return { error: error?.message ?? null };
-    },
-    async signUp(email, password) {
-      const { error } = await supabase.auth.signUp({ email, password });
       return { error: error?.message ?? null };
     },
     async signOut() {

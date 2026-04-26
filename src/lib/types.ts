@@ -2,7 +2,6 @@ export type TxType = 'income' | 'expense';
 
 export interface Category {
   id: string;
-  user_id: string;
   name: string;
   type: TxType;
   icon: string;
@@ -13,6 +12,7 @@ export interface Category {
 export interface Transaction {
   id: string;
   user_id: string;
+  creator_name: string | null;
   category_id: string | null;
   type: TxType;
   amount: number;

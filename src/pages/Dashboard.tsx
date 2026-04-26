@@ -4,6 +4,7 @@ import { ArrowDownRight, ArrowUpRight, ChevronRight, Eye } from 'lucide-react';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useAuth } from '@/contexts/AuthContext';
 import TransactionItem from '@/components/TransactionItem';
+import { getDisplayName } from '@/lib/users';
 import { formatIDR, formatIDRCompact } from '@/lib/utils';
 
 export default function Dashboard() {
@@ -45,14 +46,14 @@ export default function Dashboard() {
     if (h < 19) return 'Selamat sore';
     return 'Selamat malam';
   }, []);
-  const name = (user?.email ?? '').split('@')[0] || 'kamu';
+  const name = getDisplayName(user?.email) || 'kamu';
 
   return (
     <div className="px-5 pt-7">
       <header className="flex items-center justify-between">
         <div>
           <p className="text-sm text-zinc-500">{greeting},</p>
-          <h1 className="text-xl font-bold capitalize text-zinc-900">{name}</h1>
+          <h1 className="text-xl font-bold text-zinc-900">{name}</h1>
         </div>
       </header>
 

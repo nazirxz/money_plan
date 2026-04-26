@@ -17,7 +17,9 @@ export default function Transactions() {
     return transactions.filter((t) => {
       if (filter !== 'all' && t.type !== filter) return false;
       if (!q) return true;
-      const hay = [t.note ?? '', t.category?.name ?? ''].join(' ').toLowerCase();
+      const hay = [t.note ?? '', t.category?.name ?? '', t.creator_name ?? '']
+        .join(' ')
+        .toLowerCase();
       return hay.includes(q);
     });
   }, [transactions, filter, query]);

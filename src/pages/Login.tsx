@@ -1,16 +1,14 @@
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Wallet } from 'lucide-react';
+import { Heart, Wallet } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function Login() {
-  const { session, signIn, signUp, loading } = useAuth();
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
-  const [email, setEmail] = useState('');
+  const { session, signIn, loading } = useAuth();
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
 
   if (loading) return null;
   if (session) return <Navigate to="/" replace />;
@@ -19,65 +17,42 @@ export default function Login() {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
-    setInfo(null);
-    const fn = mode === 'signin' ? signIn : signUp;
-    const { error } = await fn(email, password);
+    const { error } = await signIn(username, password);
     setSubmitting(false);
     if (error) setError(error);
-    else if (mode === 'signup')
-      setInfo('Akun dibuat. Cek email untuk konfirmasi (jika diaktifkan), lalu masuk.');
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-brand-50 via-white to-zinc-50 px-6 py-12">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-brand-50 via-white to-pink-50 px-6 py-12">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center gap-3">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-card">
+          <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-card">
             <Wallet className="h-7 w-7" />
+            <div className="absolute -right-1.5 -bottom-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-pink-500 text-white shadow-soft">
+              <Heart className="h-3 w-3" fill="currentColor" />
+            </div>
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Money Planner</h1>
           <p className="text-center text-sm text-zinc-500">
-            Atur pemasukan & pengeluaran kamu dengan rapi.
+            Atur keuangan berdua, lebih ringan.
           </p>
         </div>
 
         <div className="card p-6">
-          <div className="mb-5 grid grid-cols-2 gap-1 rounded-2xl bg-zinc-100 p-1">
-            <button
-              type="button"
-              onClick={() => setMode('signin')}
-              className={
-                mode === 'signin'
-                  ? 'rounded-xl bg-white py-2 text-sm font-semibold text-zinc-900 shadow-soft'
-                  : 'rounded-xl py-2 text-sm font-medium text-zinc-500'
-              }
-            >
-              Masuk
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode('signup')}
-              className={
-                mode === 'signup'
-                  ? 'rounded-xl bg-white py-2 text-sm font-semibold text-zinc-900 shadow-soft'
-                  : 'rounded-xl py-2 text-sm font-medium text-zinc-500'
-              }
-            >
-              Daftar
-            </button>
-          </div>
-
           <form onSubmit={handleSubmit} className="space-y-3">
             <div>
-              <label className="text-xs font-medium text-zinc-500">Email</label>
+              <label className="text-xs font-medium text-zinc-500">Username</label>
               <input
-                type="email"
+                type="text"
                 required
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
                 className="input mt-1"
-                placeholder="kamu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                autoComplete="email"
+                placeholder="nazirxz / richan"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                autoComplete="username"
               />
             </div>
             <div>
@@ -85,30 +60,30 @@ export default function Login() {
               <input
                 type="password"
                 required
-                minLength={6}
                 className="input mt-1"
-                placeholder="Minimal 6 karakter"
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+                autoComplete="current-password"
               />
             </div>
 
             {error && (
-              <p className="rounded-xl bg-rose-50 px-3 py-2 text-xs text-rose-700">{error}</p>
-            )}
-            {info && (
-              <p className="rounded-xl bg-brand-50 px-3 py-2 text-xs text-brand-700">{info}</p>
+              <p className="rounded-xl bg-rose-50 px-3 py-2 text-xs text-rose-700">
+                {error.includes('Invalid login')
+                  ? 'Username atau password salah'
+                  : error}
+              </p>
             )}
 
             <button type="submit" disabled={submitting} className="btn-primary w-full">
-              {submitting ? 'Memproses...' : mode === 'signin' ? 'Masuk' : 'Daftar'}
+              {submitting ? 'Memproses...' : 'Masuk'}
             </button>
           </form>
         </div>
 
         <p className="mt-6 text-center text-xs text-zinc-400">
-          Data kamu tersimpan aman di Supabase.
+          Akses terbatas — hanya untuk Nazir & Richan.
         </p>
       </div>
     </div>
