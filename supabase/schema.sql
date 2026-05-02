@@ -10,6 +10,7 @@
 -- =====================================================
 drop trigger if exists on_auth_user_created on auth.users;
 drop function if exists public.seed_default_categories();
+drop table if exists public.budgets cascade;
 drop table if exists public.transactions cascade;
 drop table if exists public.categories cascade;
 
@@ -58,7 +59,29 @@ create policy "transactions_all_authenticated" on public.transactions
   with check (auth.role() = 'authenticated');
 
 -- =====================================================
--- 3. SEED KATEGORI DEFAULT
+-- 3. BUDGETS (SHARED — anggaran bulanan per kategori)
+-- =====================================================
+-- Anggaran berulang bulanan: satu nilai per kategori, berlaku untuk semua bulan.
+-- Untuk override per bulan tertentu, tambahkan kolom period_month di iterasi berikut.
+create table public.budgets (
+  id uuid primary key default gen_random_uuid(),
+  category_id uuid not null unique references public.categories(id) on delete cascade,
+  amount numeric(14, 2) not null check (amount > 0),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index budgets_category_idx on public.budgets(category_id);
+
+alter table public.budgets enable row level security;
+
+create policy "budgets_all_authenticated" on public.budgets
+  for all
+  using (auth.role() = 'authenticated')
+  with check (auth.role() = 'authenticated');
+
+-- =====================================================
+-- 4. SEED KATEGORI DEFAULT
 -- =====================================================
 insert into public.categories (name, type, icon, color) values
   ('Gaji',         'income',  'wallet',       '#10b981'),

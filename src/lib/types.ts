@@ -24,3 +24,11 @@ export interface Transaction {
 export interface TransactionWithCategory extends Transaction {
   category: Pick<Category, 'id' | 'name' | 'icon' | 'color'> | null;
 }
+
+export interface Budget {
+  id: string;
+  category_id: string;
+  amount: number;
+  created_at: string;
+  updated_at: string;
+}

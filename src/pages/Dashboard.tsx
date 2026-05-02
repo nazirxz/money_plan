@@ -1,11 +1,15 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowDownRight, ArrowUpRight, ChevronRight, Eye } from 'lucide-react';
+import { endOfMonth, startOfMonth } from 'date-fns';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useMonthlyStats } from '@/hooks/useMonthlyStats';
 import { useAuth } from '@/contexts/AuthContext';
 import TransactionItem from '@/components/TransactionItem';
 import MonthCompareCard from '@/components/MonthCompareCard';
+import CategoryBreakdown from '@/components/CategoryBreakdown';
+import BudgetCard from '@/components/BudgetCard';
+import BudgetEditorModal from '@/components/BudgetEditorModal';
 import { getDisplayName } from '@/lib/users';
 import { formatIDR, formatIDRCompact } from '@/lib/utils';
 
@@ -25,6 +29,11 @@ export default function Dashboard() {
   }, [transactions]);
 
   const monthNet = monthly.thisMonth.income - monthly.thisMonth.expense;
+  const monthRange = useMemo(() => {
+    const now = new Date();
+    return { start: startOfMonth(now), end: endOfMonth(now) };
+  }, []);
+  const [budgetEditorOpen, setBudgetEditorOpen] = useState(false);
 
   const recent = transactions.slice(0, 5);
   const greeting = useMemo(() => {
@@ -121,6 +130,34 @@ export default function Dashboard() {
           </div>
         )}
       </section>
+
+      {/* Budgets */}
+      <section className="mt-4">
+        {!loading && (
+          <BudgetCard
+            transactions={transactions}
+            start={monthRange.start}
+            end={monthRange.end}
+            onEdit={() => setBudgetEditorOpen(true)}
+          />
+        )}
+      </section>
+
+      {/* Category breakdown */}
+      <section className="mt-4">
+        {!loading && (
+          <CategoryBreakdown
+            transactions={transactions}
+            start={monthRange.start}
+            end={monthRange.end}
+          />
+        )}
+      </section>
+
+      <BudgetEditorModal
+        open={budgetEditorOpen}
+        onClose={() => setBudgetEditorOpen(false)}
+      />
 
       {/* Recent */}
       <section className="mt-6">
