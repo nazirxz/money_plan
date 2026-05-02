@@ -5,10 +5,13 @@ import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
 import Categories from './pages/Categories';
 import Settings from './pages/Settings';
+import Recurring from './pages/Recurring';
 import { useAuth } from './contexts/AuthContext';
+import { useRecurringSync } from './hooks/useRecurringSync';
 
 function ProtectedShell() {
   const { session, loading } = useAuth();
+  useRecurringSync();
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center text-sm text-zinc-500">
@@ -28,6 +31,7 @@ export default function App() {
         <Route index element={<Dashboard />} />
         <Route path="/transaksi" element={<Transactions />} />
         <Route path="/kategori" element={<Categories />} />
+        <Route path="/berulang" element={<Recurring />} />
         <Route path="/pengaturan" element={<Settings />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

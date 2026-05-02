@@ -32,3 +32,28 @@ export interface Budget {
   created_at: string;
   updated_at: string;
 }
+
+export type RecurringFrequency = 'monthly' | 'weekly';
+
+export interface RecurringRule {
+  id: string;
+  user_id: string;
+  creator_name: string | null;
+  category_id: string;
+  type: TxType;
+  amount: number;
+  note: string | null;
+  frequency: RecurringFrequency;
+  day_of_month: number | null;
+  day_of_week: number | null;
+  start_date: string;
+  end_date: string | null;
+  last_generated_at: string | null;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RecurringRuleWithCategory extends RecurringRule {
+  category: Pick<Category, 'id' | 'name' | 'icon' | 'color'> | null;
+}

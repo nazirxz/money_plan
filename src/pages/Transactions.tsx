@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
-import { ChevronDown, Filter as FilterIcon, Search, X } from 'lucide-react';
-import { endOfMonth, startOfMonth, subDays, subMonths } from 'date-fns';
+import { ChevronDown, Download, Filter as FilterIcon, Search, X } from 'lucide-react';
+import { endOfMonth, format, startOfMonth, subDays, subMonths } from 'date-fns';
 import { useTransactions } from '@/hooks/useTransactions';
 import { useCategories } from '@/hooks/useCategories';
 import TransactionItem from '@/components/TransactionItem';
 import AddTransactionModal from '@/components/AddTransactionModal';
 import { classNames, formatDate, formatIDR, formatIDRCompact } from '@/lib/utils';
+import { downloadFile, toCsv } from '@/lib/csv';
 import type { TransactionWithCategory, TxType } from '@/lib/types';
 
 type TypeFilter = 'all' | TxType;
@@ -136,18 +137,51 @@ export default function Transactions() {
     await remove(id);
   }
 
+  function handleExportCsv() {
+    if (filtered.length === 0) {
+      alert('Tidak ada transaksi untuk diekspor.');
+      return;
+    }
+    const headers = ['Tanggal', 'Waktu', 'Tipe', 'Kategori', 'Jumlah', 'Catatan', 'Pembuat'];
+    const rows = filtered.map((t) => {
+      const d = new Date(t.occurred_at);
+      return {
+        Tanggal: format(d, 'yyyy-MM-dd'),
+        Waktu: format(d, 'HH:mm'),
+        Tipe: t.type === 'income' ? 'Masuk' : 'Keluar',
+        Kategori: t.category?.name ?? '',
+        Jumlah: Number(t.amount),
+        Catatan: t.note ?? '',
+        Pembuat: t.creator_name ?? '',
+      };
+    });
+    const stamp = format(new Date(), 'yyyy-MM-dd_HHmm');
+    const filename = `money-planner_${stamp}.csv`;
+    downloadFile(filename, toCsv(rows, headers), 'text/csv');
+  }
+
   return (
     <div className="px-5 pt-7">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-zinc-900">Transaksi</h1>
-        {hasActiveFilters && (
+        <div className="flex items-center gap-1.5">
+          {hasActiveFilters && (
+            <button
+              onClick={clearFilters}
+              className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600 hover:bg-zinc-200"
+            >
+              <X className="h-3.5 w-3.5" /> Reset
+            </button>
+          )}
           <button
-            onClick={clearFilters}
-            className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600 hover:bg-zinc-200"
+            onClick={handleExportCsv}
+            disabled={filtered.length === 0}
+            className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700 hover:bg-brand-100 disabled:opacity-50"
+            title="Ekspor sebagai CSV"
           >
-            <X className="h-3.5 w-3.5" /> Reset filter
+            <Download className="h-3.5 w-3.5" /> Export
           </button>
-        )}
+        </div>
       </div>
 
       <div className="mt-4 flex items-center gap-2">
