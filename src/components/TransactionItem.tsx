@@ -1,4 +1,4 @@
-import { Trash2 } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
 import { getIcon } from '@/lib/icons';
 import { getColorByMemberName } from '@/lib/users';
 import type { TransactionWithCategory } from '@/lib/types';
@@ -7,9 +7,10 @@ import { formatIDR, formatTime } from '@/lib/utils';
 interface Props {
   tx: TransactionWithCategory;
   onDelete?: (id: string) => void;
+  onEdit?: (tx: TransactionWithCategory) => void;
 }
 
-export default function TransactionItem({ tx, onDelete }: Props) {
+export default function TransactionItem({ tx, onDelete, onEdit }: Props) {
   const Icon = getIcon(tx.category?.icon ?? null);
   const color = tx.category?.color ?? '#64748b';
   const isIncome = tx.type === 'income';
@@ -49,6 +50,15 @@ export default function TransactionItem({ tx, onDelete }: Props) {
         >
           {isIncome ? '+' : '−'} {formatIDR(tx.amount)}
         </span>
+        {onEdit && (
+          <button
+            aria-label="Edit"
+            onClick={() => onEdit(tx)}
+            className="rounded-full p-1.5 text-zinc-400 opacity-0 transition group-hover:opacity-100 hover:bg-brand-50 hover:text-brand-600"
+          >
+            <Pencil className="h-4 w-4" />
+          </button>
+        )}
         {onDelete && (
           <button
             aria-label="Hapus"

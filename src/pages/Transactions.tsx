@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
 import { useTransactions } from '@/hooks/useTransactions';
 import TransactionItem from '@/components/TransactionItem';
+import AddTransactionModal from '@/components/AddTransactionModal';
 import { classNames, formatDate, formatIDR } from '@/lib/utils';
 import type { TransactionWithCategory, TxType } from '@/lib/types';
 
@@ -11,6 +12,7 @@ export default function Transactions() {
   const { transactions, loading, remove } = useTransactions();
   const [filter, setFilter] = useState<Filter>('all');
   const [query, setQuery] = useState('');
+  const [editing, setEditing] = useState<TransactionWithCategory | null>(null);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -111,7 +113,12 @@ export default function Transactions() {
                 </div>
                 <div className="card divide-y divide-zinc-100 p-1">
                   {items.map((tx) => (
-                    <TransactionItem key={tx.id} tx={tx} onDelete={handleDelete} />
+                    <TransactionItem
+                      key={tx.id}
+                      tx={tx}
+                      onDelete={handleDelete}
+                      onEdit={setEditing}
+                    />
                   ))}
                 </div>
               </section>
@@ -119,6 +126,13 @@ export default function Transactions() {
           })
         )}
       </div>
+
+      <AddTransactionModal
+        open={editing !== null}
+        onClose={() => setEditing(null)}
+        editing={editing}
+        onUpdated={() => setEditing(null)}
+      />
     </div>
   );
 }

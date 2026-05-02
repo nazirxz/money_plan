@@ -4,17 +4,26 @@ import { useCategories } from '@/hooks/useCategories';
 import { useTransactions } from '@/hooks/useTransactions';
 import { classNames, formatAmountInput, parseAmountInput } from '@/lib/utils';
 import { getIcon } from '@/lib/icons';
-import type { TxType } from '@/lib/types';
+import type { TransactionWithCategory, TxType } from '@/lib/types';
 
 interface Props {
   open: boolean;
   onClose: () => void;
   onCreated?: () => void;
+  onUpdated?: () => void;
+  editing?: TransactionWithCategory | null;
 }
 
-export default function AddTransactionModal({ open, onClose, onCreated }: Props) {
+export default function AddTransactionModal({
+  open,
+  onClose,
+  onCreated,
+  onUpdated,
+  editing,
+}: Props) {
   const { categories } = useCategories();
-  const { create } = useTransactions();
+  const { create, update } = useTransactions();
+  const isEdit = Boolean(editing);
   const [type, setType] = useState<TxType>('expense');
   const [amountText, setAmountText] = useState('');
   const [categoryId, setCategoryId] = useState<string | null>(null);
@@ -30,17 +39,29 @@ export default function AddTransactionModal({ open, onClose, onCreated }: Props)
 
   useEffect(() => {
     if (!open) return;
-    setType('expense');
-    setAmountText('');
-    setCategoryId(null);
-    setNote('');
-    setDate(new Date().toISOString().slice(0, 10));
+    if (editing) {
+      setType(editing.type);
+      setAmountText(formatAmountInput(Number(editing.amount)));
+      setCategoryId(editing.category_id);
+      setNote(editing.note ?? '');
+      setDate(editing.occurred_at.slice(0, 10));
+    } else {
+      setType('expense');
+      setAmountText('');
+      setCategoryId(null);
+      setNote('');
+      setDate(new Date().toISOString().slice(0, 10));
+    }
     setError(null);
-  }, [open]);
+  }, [open, editing]);
 
   useEffect(() => {
+    // When type changes manually, reset to first category of that type — but
+    // only if current selection is not valid for the type. This preserves the
+    // editing transaction's category on open.
+    if (categoryId && filtered.some((c) => c.id === categoryId)) return;
     setCategoryId(filtered[0]?.id ?? null);
-  }, [filtered]);
+  }, [filtered, categoryId]);
 
   const amount = parseAmountInput(amountText);
 
@@ -51,24 +72,32 @@ export default function AddTransactionModal({ open, onClose, onCreated }: Props)
     }
     setSubmitting(true);
     setError(null);
-    const occurred = new Date(`${date}T${new Date().toTimeString().slice(0, 8)}`);
-    const { error } = await create({
+    const occurred = isEdit && editing
+      ? new Date(`${date}T${editing.occurred_at.slice(11, 19)}`)
+      : new Date(`${date}T${new Date().toTimeString().slice(0, 8)}`);
+    const payload = {
       type,
       amount,
       category_id: categoryId,
       note: note.trim() || null,
       occurred_at: occurred.toISOString(),
-    });
+    };
+
+    const { error } = isEdit && editing
+      ? await update(editing.id, payload)
+      : await create(payload);
+
     setSubmitting(false);
     if (error) {
       setError(error);
       return;
     }
-    onCreated?.();
+    if (isEdit) onUpdated?.();
+    else onCreated?.();
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Tambah Transaksi">
+    <Modal open={open} onClose={onClose} title={isEdit ? 'Edit Transaksi' : 'Tambah Transaksi'}>
       <div className="grid grid-cols-2 gap-2 rounded-2xl bg-zinc-100 p-1">
         {(['expense', 'income'] as TxType[]).map((t) => (
           <button
@@ -170,7 +199,7 @@ export default function AddTransactionModal({ open, onClose, onCreated }: Props)
         disabled={submitting || amount <= 0}
         className="btn-primary mt-6 w-full"
       >
-        {submitting ? 'Menyimpan...' : 'Simpan'}
+        {submitting ? 'Menyimpan...' : isEdit ? 'Simpan perubahan' : 'Simpan'}
       </button>
     </Modal>
   );

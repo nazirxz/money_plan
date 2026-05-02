@@ -53,6 +53,25 @@ export function useTransactions() {
     [refresh]
   );
 
+  const update = useCallback(
+    async (id: string, input: CreateInput) => {
+      const { error } = await supabase
+        .from('transactions')
+        .update({
+          type: input.type,
+          amount: input.amount,
+          category_id: input.category_id,
+          note: input.note ?? null,
+          occurred_at: input.occurred_at ?? new Date().toISOString(),
+        })
+        .eq('id', id);
+      if (error) return { error: error.message };
+      await refresh();
+      return { error: null };
+    },
+    [refresh]
+  );
+
   const remove = useCallback(
     async (id: string) => {
       const { error } = await supabase.from('transactions').delete().eq('id', id);
@@ -63,5 +82,5 @@ export function useTransactions() {
     [refresh]
   );
 
-  return { transactions, loading, error, refresh, create, remove };
+  return { transactions, loading, error, refresh, create, update, remove };
 }

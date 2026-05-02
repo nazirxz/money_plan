@@ -2,41 +2,29 @@ import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowDownRight, ArrowUpRight, ChevronRight, Eye } from 'lucide-react';
 import { useTransactions } from '@/hooks/useTransactions';
+import { useMonthlyStats } from '@/hooks/useMonthlyStats';
 import { useAuth } from '@/contexts/AuthContext';
 import TransactionItem from '@/components/TransactionItem';
+import MonthCompareCard from '@/components/MonthCompareCard';
 import { getDisplayName } from '@/lib/users';
 import { formatIDR, formatIDRCompact } from '@/lib/utils';
 
 export default function Dashboard() {
   const { user } = useAuth();
   const { transactions, loading } = useTransactions();
+  const monthly = useMonthlyStats(transactions);
 
-  const stats = useMemo(() => {
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    let totalIncome = 0;
-    let totalExpense = 0;
-    let monthIncome = 0;
-    let monthExpense = 0;
-
+  const balance = useMemo(() => {
+    let income = 0;
+    let expense = 0;
     for (const t of transactions) {
-      if (t.type === 'income') totalIncome += Number(t.amount);
-      else totalExpense += Number(t.amount);
-
-      const d = new Date(t.occurred_at);
-      if (d >= monthStart) {
-        if (t.type === 'income') monthIncome += Number(t.amount);
-        else monthExpense += Number(t.amount);
-      }
+      if (t.type === 'income') income += Number(t.amount);
+      else expense += Number(t.amount);
     }
-
-    return {
-      balance: totalIncome - totalExpense,
-      monthIncome,
-      monthExpense,
-      monthNet: monthIncome - monthExpense,
-    };
+    return income - expense;
   }, [transactions]);
+
+  const monthNet = monthly.thisMonth.income - monthly.thisMonth.expense;
 
   const recent = transactions.slice(0, 5);
   const greeting = useMemo(() => {
@@ -66,17 +54,17 @@ export default function Dashboard() {
             <Eye className="h-3.5 w-3.5" /> Saldo total
           </div>
           <p className="mt-1.5 text-3xl font-bold tracking-tight">
-            {loading ? '...' : formatIDR(stats.balance)}
+            {loading ? '...' : formatIDR(balance)}
           </p>
           <div className="mt-5 grid grid-cols-2 gap-3">
             <StatPill
               label="Pemasukan bulan ini"
-              value={stats.monthIncome}
+              value={monthly.thisMonth.income}
               tone="up"
             />
             <StatPill
               label="Pengeluaran bulan ini"
-              value={stats.monthExpense}
+              value={monthly.thisMonth.expense}
               tone="down"
             />
           </div>
@@ -89,13 +77,13 @@ export default function Dashboard() {
           <p className="text-xs text-zinc-500">Selisih bulan ini</p>
           <p
             className={
-              stats.monthNet >= 0
+              monthNet >= 0
                 ? 'mt-0.5 text-lg font-bold text-brand-700 tabular-nums'
                 : 'mt-0.5 text-lg font-bold text-rose-600 tabular-nums'
             }
           >
-            {stats.monthNet >= 0 ? '+' : ''}
-            {formatIDR(stats.monthNet)}
+            {monthNet >= 0 ? '+' : ''}
+            {formatIDR(monthNet)}
           </p>
         </div>
         <div className="text-right">
@@ -105,6 +93,34 @@ export default function Dashboard() {
           </p>
         </div>
       </div>
+
+      {/* Month-over-month comparison */}
+      <section className="mt-4">
+        <div className="mb-2 flex items-center justify-between px-1">
+          <h2 className="text-sm font-semibold text-zinc-900">Bulan ini vs bulan lalu</h2>
+        </div>
+        {loading ? (
+          <div className="card p-6 text-center text-sm text-zinc-500">Memuat...</div>
+        ) : (
+          <div className="grid gap-3">
+            <MonthCompareCard
+              metric="expense"
+              thisMonth={monthly.thisMonth.expense}
+              lastMonth={monthly.lastMonth.expense}
+              delta={monthly.expenseDelta}
+              projected={monthly.projectedExpense}
+              daysElapsed={monthly.daysElapsed}
+              daysInMonth={monthly.daysInMonth}
+            />
+            <MonthCompareCard
+              metric="income"
+              thisMonth={monthly.thisMonth.income}
+              lastMonth={monthly.lastMonth.income}
+              delta={monthly.incomeDelta}
+            />
+          </div>
+        )}
+      </section>
 
       {/* Recent */}
       <section className="mt-6">
